@@ -1,0 +1,28 @@
+## .NET build output
+bin/
+obj/
+out/
+
+## Visual Studio / Rider / VS Code
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+
+## Test results
+[Tt]est[Rr]esult*/
+*.trx
+
+## User secrets (these live outside the repo anyway via dotnet user-secrets,
+## but just in case anything ever gets dumped locally)
+secrets.json
+
+## OS cruft
+.DS_Store
+Thumbs.db
+
+## EF Core
+*.mdf
+*.ldf
+*.ndf
