@@ -58,6 +58,8 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 
+builder.Services.AddScoped<Mesh.Api.Auth.TokenService>();
+
 // ---- CORS ----
 // Permissive for now - the frontend runs on a dynamic Codespaces-forwarded
 // port during dev. Tighten this to a specific allowed-origins list once
