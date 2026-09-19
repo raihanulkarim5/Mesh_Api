@@ -18,14 +18,17 @@ files should need to change, per the mock-first design.
 
 ## Phase 1 — Auth endpoints
 
-- [ ] `POST /api/v1/auth/register` (email + password, via Identity's `UserManager`)
-- [ ] `POST /api/v1/auth/login` (issues access token + refresh token)
-- [ ] `POST /api/v1/auth/refresh` (rotates/validates refresh token, issues new access token)
-- [ ] `POST /api/v1/auth/logout` (revokes the refresh token — sets `RevokedAtUtc`)
-- [ ] `POST /api/v1/auth/google` (verifies Google ID token server-side, finds-or-creates user, auto-links by email, issues Mesh tokens)
-- [ ] Google Cloud Console OAuth client set up, Client ID in config (separate from this repo — you'll need to create this in Google's console)
-- [ ] Demo account seeded (`demo@meshapp.local` / `Demo@12345`) with mock service demo data
-- [ ] Swagger "Authorize" flow tested end-to-end (register → login → paste token → hit a protected endpoint)
+- [x] `POST /api/v1/auth/register` (email + password, via Identity's `UserManager`)
+- [x] `POST /api/v1/auth/login` (issues access token + refresh token)
+- [x] `POST /api/v1/auth/refresh` (rotates/validates refresh token, issues new access token)
+- [x] `POST /api/v1/auth/logout` (revokes the refresh token — sets `RevokedAtUtc`)
+- [x] `POST /api/v1/auth/google` (code written — endpoint verifies a Google ID token and issues Mesh tokens; **not usable until the OAuth client below is set up**)
+- [x] Demo account seeded (`demo@meshapp.local` / `Demo@12345`)
+- [ ] **Verified locally** — register/login/refresh/logout tested end-to-end in Swagger (pending your report)
+
+**⏸ Waiting list — deferred, not blocking:**
+- [ ] Google Cloud Console OAuth client set up, Client ID in config — doing OAuth later
+- [ ] Google Sign-In end-to-end test (depends on the above)
 
 ## Phase 2 — Entries (first real module, proof of the full pipeline)
 
@@ -89,4 +92,4 @@ files should need to change, per the mock-first design.
 ---
 
 **Not on this list because they're explicitly deferred, not forgotten:**
-email verification, password reset, roles/permissions, mobile app (Flutter, "much later"), Apple Sign-In (no iOS plans).
+email verification, password reset, roles/permissions, mobile app (Flutter, "much later"), Apple Sign-In (no iOS plans), Google OAuth client setup + testing ("doing OAuth later" — code is written and waiting, see Phase 1).
