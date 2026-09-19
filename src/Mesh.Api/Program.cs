@@ -114,4 +114,9 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
+using (var scope = app.Services.CreateScope())
+{
+    await Mesh.Api.Auth.DbSeeder.SeedDemoUserAsync(scope.ServiceProvider);
+}
+
 app.Run();
