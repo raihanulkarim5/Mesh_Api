@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Mesh.Domain.Entities;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -19,6 +20,7 @@ public class MeshDbContext : IdentityDbContext<ApplicationUser>
     }
 
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+    public DbSet<Entry> Entries => Set<Entry>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -31,6 +33,21 @@ public class MeshDbContext : IdentityDbContext<ApplicationUser>
                   .WithMany()
                   .HasForeignKey(t => t.UserId)
                   .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<Entry>(entity =>
+        {
+            entity.Property(e => e.Tags)
+                  .HasConversion(
+                      tags => JsonSerializer.Serialize(tags, (JsonSerializerOptions?)null),
+                      json => JsonSerializer.Deserialize<List<string>>(json, (JsonSerializerOptions?)null) ?? new List<string>());
+
+            entity.HasOne(e => e.User)
+                  .WithMany()
+                  .HasForeignKey(e => e.UserId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.UserId);
         });
     }
 }
