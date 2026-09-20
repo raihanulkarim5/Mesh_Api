@@ -43,6 +43,11 @@ builder.Services.AddAuthentication(options =>
 })
 .AddJwtBearer(options =>
 {
+    // Without this, the handler silently remaps short claim names like
+    // "sub" to the long ClaimTypes.NameIdentifier URI, which would break
+    // CurrentUserExtensions.GetUserId() (it looks for the raw "sub" claim,
+    // matching what TokenService actually issues).
+    options.MapInboundClaims = false;
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuer = true,
