@@ -21,6 +21,7 @@ public class MeshDbContext : IdentityDbContext<ApplicationUser>
 
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<Entry> Entries => Set<Entry>();
+    public DbSet<TaskItem> Tasks => Set<TaskItem>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -48,6 +49,26 @@ public class MeshDbContext : IdentityDbContext<ApplicationUser>
                   .OnDelete(DeleteBehavior.Cascade);
 
             entity.HasIndex(e => e.UserId);
+        });
+
+        builder.Entity<TaskItem>(entity =>
+        {
+            entity.Property(t => t.Tags)
+                  .HasConversion(
+                      tags => JsonSerializer.Serialize(tags, (JsonSerializerOptions?)null),
+                      json => JsonSerializer.Deserialize<List<string>>(json, (JsonSerializerOptions?)null) ?? new List<string>());
+
+            entity.HasOne(t => t.User)
+                  .WithMany()
+                  .HasForeignKey(t => t.UserId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(t => t.UserId);
+
+            entity.HasMany(t => t.Checklist)
+                  .WithOne(c => c.TaskItem)
+                  .HasForeignKey(c => c.TaskItemId)
+                  .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }
