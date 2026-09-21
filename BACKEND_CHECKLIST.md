@@ -40,8 +40,9 @@ files should need to change, per the mock-first design.
 
 ## Phase 3 — Tasks
 
-- [ ] `Task` entity + `ChecklistItem` (child collection)
-- [ ] Controller: full CRUD + status/priority updates + checklist item toggle
+- [x] `TaskItem` entity (named to avoid colliding with `System.Threading.Tasks.Task`) + `ChecklistItem` (real child table, not JSON)
+- [x] Controller: full CRUD + partial updates (status/priority/favorite) + checklist add/toggle/remove
+- [ ] Migration + verified locally
 - [ ] Swap `taskService`
 
 ## Phase 4 — Journal
