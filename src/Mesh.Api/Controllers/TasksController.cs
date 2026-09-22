@@ -88,6 +88,7 @@ public class TasksController : ControllerBase
         if (request.Recurring is not null) task.Recurring = request.Recurring;
         if (request.Tags is not null) task.Tags = request.Tags;
         if (request.Favorite.HasValue) task.Favorite = request.Favorite.Value;
+        if (request.Checklist is not null) ReconcileChecklist(task, request.Checklist);
         task.UpdatedAtUtc = DateTime.UtcNow;
 
         await _db.SaveChangesAsync();
@@ -108,28 +109,48 @@ public class TasksController : ControllerBase
         return NoContent();
     }
 
-    // ---- Checklist sub-resource ----
-
-    [HttpPost("{taskId:guid}/checklist")]
-    public async Task<IActionResult> AddChecklistItem(Guid taskId, ChecklistItemRequest request)
+    /// <summary>
+    /// The frontend's real contract: adding/removing a checklist item means
+    /// sending the whole modified array back through the general update
+    /// endpoint (TaskUpdate.checklist), not dedicated add/remove calls.
+    /// Items with a matching existing Id get updated in place; items with
+    /// no Id (or an Id not found on this task) are new; existing items not
+    /// present in the incoming array are removed.
+    /// </summary>
+    private void ReconcileChecklist(TaskItem task, List<ChecklistItemRequest> incoming)
     {
-        var userId = this.GetUserId();
-        var task = await _db.Tasks
-            .Include(t => t.Checklist)
-            .FirstOrDefaultAsync(t => t.Id == taskId && t.UserId == userId);
-        if (task is null) return NotFound();
-
-        var item = new ChecklistItem
+        var incomingIds = incoming.Where(i => i.Id.HasValue).Select(i => i.Id!.Value).ToHashSet();
+        var toRemove = task.Checklist.Where(c => !incomingIds.Contains(c.Id)).ToList();
+        foreach (var item in toRemove)
         {
-            TaskItemId = task.Id,
-            Text = request.Text,
-            Order = task.Checklist.Count,
-        };
-        task.Checklist.Add(item);
-        task.UpdatedAtUtc = DateTime.UtcNow;
-        await _db.SaveChangesAsync();
+            task.Checklist.Remove(item);
+            _db.Remove(item);
+        }
 
-        return Ok(ToResponse(task));
+        for (var i = 0; i < incoming.Count; i++)
+        {
+            var incomingItem = incoming[i];
+            var existing = incomingItem.Id.HasValue
+                ? task.Checklist.FirstOrDefault(c => c.Id == incomingItem.Id.Value)
+                : null;
+
+            if (existing is not null)
+            {
+                existing.Text = incomingItem.Text;
+                existing.Done = incomingItem.Done;
+                existing.Order = i;
+            }
+            else
+            {
+                task.Checklist.Add(new ChecklistItem
+                {
+                    TaskItemId = task.Id,
+                    Text = incomingItem.Text,
+                    Done = incomingItem.Done,
+                    Order = i,
+                });
+            }
+        }
     }
 
     [HttpPatch("{taskId:guid}/checklist/{itemId:guid}")]
@@ -145,26 +166,6 @@ public class TasksController : ControllerBase
         if (item is null) return NotFound();
 
         item.Done = !item.Done;
-        task.UpdatedAtUtc = DateTime.UtcNow;
-        await _db.SaveChangesAsync();
-
-        return Ok(ToResponse(task));
-    }
-
-    [HttpDelete("{taskId:guid}/checklist/{itemId:guid}")]
-    public async Task<IActionResult> RemoveChecklistItem(Guid taskId, Guid itemId)
-    {
-        var userId = this.GetUserId();
-        var task = await _db.Tasks
-            .Include(t => t.Checklist)
-            .FirstOrDefaultAsync(t => t.Id == taskId && t.UserId == userId);
-        if (task is null) return NotFound();
-
-        var item = task.Checklist.FirstOrDefault(c => c.Id == itemId);
-        if (item is null) return NotFound();
-
-        task.Checklist.Remove(item);
-        _db.Remove(item);
         task.UpdatedAtUtc = DateTime.UtcNow;
         await _db.SaveChangesAsync();
 

@@ -13,7 +13,11 @@ public record CreateTaskRequest(
 
 // All optional, same partial-update approach as Entries' UpdateEntryRequest -
 // the frontend's status-cycle and favorite-toggle actions each only send
-// the one field they're changing.
+// the one field they're changing. Checklist is included here (not as
+// separate add/remove endpoints) because that's how the frontend's real
+// TaskUpdate type works: adding or removing a checklist item means sending
+// the whole modified array through this same endpoint. Only toggling a
+// single item's done state is a dedicated action (see TogglePosition below).
 public record UpdateTaskRequest(
     string? Title,
     string? Description,
@@ -23,9 +27,10 @@ public record UpdateTaskRequest(
     int? EffortEstimateHours,
     string? Recurring,
     List<string>? Tags,
+    List<ChecklistItemRequest>? Checklist,
     bool? Favorite);
 
-public record ChecklistItemRequest([property: Required] string Text);
+public record ChecklistItemRequest(Guid? Id, [property: Required] string Text, bool Done);
 
 public record ChecklistItemResponse(Guid Id, string Text, bool Done, int Order);
 
